@@ -8,7 +8,6 @@ driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install())
 driver.get("https://www.yelp.com/")
 links = driver.find_elements(By.TAG_NAME, 'a')
 email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
-print(links)
 
 for link in links:
     href = link.get_attribute('href')

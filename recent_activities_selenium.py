@@ -46,14 +46,10 @@ try:
 
         # Click the "Show Next" button
         show_next_button.click()
-        time.sleep(3)
-        # Extract the data from the current page
         list_activities(driver)
 
-        # Check if there is no "Show Next" button, indicating the end of the data
+        # Stop after a few data extraction
         if len(all_activities) >= 50:
             break
-        # if not show_next_button.is_displayed():
-        #     break
 except Exception as E:
     print(E)
