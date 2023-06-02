@@ -35,7 +35,6 @@ def extract_events(driver_instance):
             'event_date': event_date,
             'event_location': event_location
         }
-        print(events_data)
     return driver_instance
 
 

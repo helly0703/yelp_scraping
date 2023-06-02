@@ -29,7 +29,6 @@ def get_events():
 
 @app.route('/articles', methods=['GET'])
 def get_articles():
-    print("Articles")
     data = get_articles_data()
     return jsonify({'articles': data})
 
