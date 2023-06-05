@@ -1,8 +1,4 @@
-import time
-
-from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
-import json
 import pandas as pd
 
 
@@ -90,4 +86,3 @@ def dict_to_csv(data_dict, csv_file):
     # Write the DataFrame to a CSV file
     df.to_csv(csv_file)
 
-# Example usage
