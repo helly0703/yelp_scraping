@@ -42,15 +42,8 @@ def extract_events_data(driver_instance, events_data):
         event_name = find_element_by_given_filter(event_instance, "a span", By.CSS_SELECTOR)
         event_body = find_elements_by_given_filter(container, ".card_content div", By.CSS_SELECTOR)
         event_type = find_element_by_given_filter(container, ".card_footer a", By.CSS_SELECTOR)
-        for event_data in event_body:
-            try:
-                event_date = event_data.text
-            except NoSuchElementException as E:
-                event_date = ''
-            try:
-                event_location = find_element_by_given_filter(event_data, "a span", By.CSS_SELECTOR).text
-            except NoSuchElementException as E:
-                event_location = ''
+        event_date = event_body[0].text
+        event_location = event_body[1].text
         events_data[event_name.text] = {
             'image_link': event_img.get_attribute('src'),
             'event_name': event_name.text,
