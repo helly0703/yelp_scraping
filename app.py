@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 
 from yelp_scrap.constants import EMAILS_CONSTANT, PRODUCTS_CSV_FILE, ARTICLES_CSV, ACTIVITIES_CSV, EMAILS_CSV, \
-    EVENTS_CSV
+    EVENTS_CSV, NO_EMAILS_FOUND
 from yelp_scrap.driver import (ExtractArticlesClass, ExtractEventsClass, ExtractActivitiesClass,
                                ExtractProductsClass, ExtractEmailsClass)
 from yelp_scrap.utils import json_to_csv, dict_to_csv
@@ -80,7 +80,10 @@ def get_emails():
 def get_emails_csv():
     emails = ExtractEmailsClass()
     data_to_display = emails.extract_emails()
-    dict_to_csv(data_to_display, EMAILS_CSV)
+    if data_to_display[EMAILS_CONSTANT]:
+        dict_to_csv(data_to_display, EMAILS_CSV)
+    else:
+        data_to_display = NO_EMAILS_FOUND
     return jsonify({EMAILS_CONSTANT: data_to_display})
 
 

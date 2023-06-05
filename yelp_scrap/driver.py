@@ -7,7 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 
-from yelp_scrap.constants import (ARTICLES_URL, CHROME_EXECUTABLE_PATH, EVENTS_URL, ACTIVITIES_URL, NO_EMAILS_FOUND,
+from yelp_scrap.constants import (ARTICLES_URL, CHROME_EXECUTABLE_PATH, EVENTS_URL, ACTIVITIES_URL,
                                   EMAILS_CONSTANT, EMAIL_REGEX)
 from yelp_scrap.utils import (extract_articles_data, extract_events_data, list_activities,
                               find_elements_by_given_filter,
@@ -56,7 +56,6 @@ class ExtractArticlesClass(DriverClass):
             self.driver, self.response_data = extract_articles_data(self.driver, self.response_data)
             self.return_to_tab_0()
         self.quit_driver()
-        print(self.response_data)
         return self.response_data
 
 
@@ -125,5 +124,5 @@ class ExtractEmailsClass(DriverClass):
                     for email in email_matches:
                         self.email_list.append(email)
         self.driver.quit()
-        self.response_data = {EMAILS_CONSTANT: self.email_list if self.email_list != [] else NO_EMAILS_FOUND}
+        self.response_data = {EMAILS_CONSTANT: self.email_list}
         return self.response_data
