@@ -1,3 +1,4 @@
+import logging
 import re
 import time
 
@@ -7,11 +8,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 
-from yelp_scrap.constants import (ARTICLES_URL, CHROME_EXECUTABLE_PATH, EVENTS_URL, ACTIVITIES_URL,
-                                  EMAILS_CONSTANT, EMAIL_REGEX)
-from yelp_scrap.utils import (extract_articles_data, extract_events_data, list_activities,
-                              find_elements_by_given_filter,
-                              find_element_by_given_filter)
+from yelp_project.yelp_scrap.constants import (ARTICLES_URL, CHROME_EXECUTABLE_PATH, EVENTS_URL, ACTIVITIES_URL,
+                                               EMAILS_CONSTANT, EMAIL_REGEX)
+from yelp_project.yelp_scrap.utils import (extract_articles_data, extract_events_data, list_activities,
+                                           find_elements_by_given_filter,
+                                           find_element_by_given_filter)
 from selenium.webdriver.support import expected_conditions as EC
 
 
@@ -24,7 +25,10 @@ class DriverClass:
         options = ChromeOptions()
         options.add_argument('--headless')  # Run Chrome in headless mode
         self.response_data = {}
-        self.driver = Chrome(executable_path=CHROME_EXECUTABLE_PATH, options=options)
+        try:
+            self.driver = Chrome(executable_path=CHROME_EXECUTABLE_PATH, options=options)
+        except Exception as E:
+            logging.warning('Chrome driver creation failure!!')
         time.sleep(2)
 
     def navigate_to_url(self, url):
@@ -49,6 +53,7 @@ class DriverClass:
 class ExtractArticlesClass(DriverClass):
     def extract_articles(self):
         self.navigate_to_url(ARTICLES_URL)
+
         more_articles = find_elements_by_given_filter(self.driver, "b-content-loop--layout_row", By.CLASS_NAME)
         for article in more_articles:
             link = find_elements_by_given_filter(article, "c-content-block__cta-link", By.CLASS_NAME)[0]
@@ -89,8 +94,9 @@ class ExtractActivitiesClass(DriverClass):
 
 class ExtractProductsClass(DriverClass):
     def extract_products(self):
+        logging.info('Chrome driver created successfully!!')
         self.navigate_to_url(ACTIVITIES_URL)
-        time.sleep(2)
+        logging.info('Driver received page successfully!!')
         wait = WebDriverWait(self.driver, 10)
         wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "header-link_anchor__09f24__eCD4u")))
         elements = find_elements_by_given_filter(self.driver, "header-link_anchor__09f24__eCD4u", By.CLASS_NAME)
