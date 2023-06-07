@@ -10,18 +10,15 @@ This is the folder/file structure we have.
 ├── /yelp_project
 │   ├── __init__.py             ----------------------------> Construct app here   
 │   ├── constant.py             ----------------------------> All needed constants here(Not present currently)
-│   ├── response_utils.py       ----------------------------> Response utilities Success/Error(Not present currently)
-│   ├── error_handler_utils.py  ----------------------------> App level error handler(Not present currently)
 │   └── /yelp_scrap
 │       ├── __init__.py
-│       ├── models.py            -------------> Business logic plus Database model(TODO)
-│       ├── routes.py            -------------> API endpoints(TODO)
-│       ├── request_response_handler.py -------------> Managing the Requsts and final Response(Not present currently)
-│       └── config.py            ------------------------> For cofiguration Production Vs Debug etc.(TODO)
-└── tests
-     ├── __init__.py
-     ├── test_app.py        ------------------------> Test cases for all apis - For Pytest(Not Present currently)
-└── flask_best_practices.wsgi  ------------------------> For deployment in apache(Not present currently)
+│       ├── models.py            -------------> Business logic plus Database model
+│       ├── routes.py            -------------> Defined the routes here
+│       ├── constants.py            -------------> All the constants here
+│       ├── custom_logger.py            -------------> Custom Logger file
+│       ├── driver.py -------------> Driver classes for all the apis
+│       ├── utils.py -------------> Utilities function
+│       └── config.py            ------------------------> For cofiguration
 └── requirements.txt        ------------------------> Packages and third party libraries
 └── wsgi.py                 ------------------------> For running our app, This is entry point
 └── .env                    ------------------------> For exporting secret variables
