@@ -1,6 +1,16 @@
+import logging
+
 from flask import Flask
 
-from yelp_project.yelp_scrap import routes
+from flask_sqlalchemy import SQLAlchemy
+
+from yelp_project.yelp_scrap.config import Config
+from yelp_project.yelp_scrap.custom_logger import CustomLoggerClass
+
+# Created SQLAlchemy Object
+db = SQLAlchemy()
+
+logger_instance = CustomLoggerClass()
 
 
 def create_app():
@@ -11,11 +21,18 @@ def create_app():
 
     >> Create a Flask app object, which derives configuration values (either from a Python class, a config file,
     or environment variables).
-    >> Initialize plugins accessible to any part of our app, such as a database (via flask_sqlalchemy),
-    Redis (via flask_redis) or user authentication (via Flask-Login).
+    >> Initialize plugins accessible to any part of our app, such as a database (via flask_sqlalchemy).
     >> Import the logic which makes up our app (such as routes).
     >> Register Blueprints.
     """
-    app = Flask(__name__, instance_relative_config=False)
-    app.register_blueprint(routes.yelp_bp, url_prefix='/yelp')
+    app = Flask(__name__)
+    app.debug = True
+    app.config.from_object(Config)
+    db.init_app(app)  # SQLAlchemy
+
+    from yelp_project.yelp_scrap.routes import yelp_bp
+    from yelp_project.yelp_scrap import models
+    app.register_blueprint(yelp_bp, url_prefix='/yelp')
+
+    logger_instance.logger.info('Flask app object created successfully!')
     return app

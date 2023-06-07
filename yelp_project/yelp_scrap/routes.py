@@ -2,6 +2,7 @@ import logging
 
 from flask import Blueprint, jsonify
 
+from yelp_project import logger_instance
 from yelp_project.yelp_scrap.constants import (PRODUCTS_CSV_FILE, ACTIVITIES_CSV, EVENTS_CSV, ARTICLES_CSV,
                                                EMAILS_CONSTANT, EMAILS_CSV, NO_EMAILS_FOUND)
 from yelp_project.yelp_scrap.driver import (ExtractProductsClass, ExtractActivitiesClass, ExtractEventsClass,
@@ -13,7 +14,7 @@ yelp_bp = Blueprint('yelp_bp', __name__)
 
 @yelp_bp.route('/products', methods=['GET'])
 def get_products():
-    logging.warning('Products Scrapping api has been hit')
+    logger_instance.logger.warning('Products Scrapping api has been hit')
     products = ExtractProductsClass()
     data_to_display = products.extract_products()
     return jsonify({'products': data_to_display})
