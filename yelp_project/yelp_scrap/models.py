@@ -4,7 +4,6 @@ from yelp_project import db
 
 
 class Article(db.Model):
-    # To change actual table name in the database, As by default it will be same as the model name
     __tablename__ = 'articles'
 
     article_id = db.Column(db.Integer, primary_key=True)
@@ -20,7 +19,6 @@ class Article(db.Model):
 
 
 class Activities(db.Model):
-    # To change actual table name in the database, As by default it will be same as the model name
     __tablename__ = 'activities'
 
     activity_id = db.Column(db.Integer, primary_key=True)
@@ -34,7 +32,6 @@ class Activities(db.Model):
 
 
 class Event(db.Model):
-    # To change actual table name in the database, As by default it will be same as the model name
     __tablename__ = 'events'
 
     event_id = db.Column(db.Integer, primary_key=True)
@@ -51,7 +48,6 @@ class Event(db.Model):
 
 
 class Product(db.Model):
-    # To change actual table name in the database, As by default it will be same as the model name
     __tablename__ = 'products'
 
     product_id = db.Column(db.Integer, primary_key=True)
@@ -62,7 +58,6 @@ class Product(db.Model):
 
 
 class Category(db.Model):
-    # To change actual table name in the database, As by default it will be same as the model name
     __tablename__ = 'category'
 
     category_id = db.Column(db.Integer, primary_key=True)
@@ -75,7 +70,6 @@ class Category(db.Model):
 
 
 class Emails(db.Model):
-    # To change actual table name in the database, As by default it will be same as the model name
     __tablename__ = 'emails'
 
     email_id = db.Column(db.Integer, primary_key=True)

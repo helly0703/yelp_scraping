@@ -21,7 +21,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 class DriverClass:
     """
-    Class to create chrome driver and related tasks
+    Class to create chrome driver and related tasks using selenium
     """
 
     def __init__(self):
@@ -44,6 +44,7 @@ class DriverClass:
             return Exception
 
     def click_and_open_new_tab(self, link):
+        """Click element and open url in new tab"""
         try:
             action_chains = ActionChains(self.driver)
             action_chains.key_down(Keys.CONTROL).click(link).key_up(Keys.CONTROL).perform()
@@ -53,6 +54,7 @@ class DriverClass:
             logger_instance.logger.exception(ERROR_IN_NEW_TAB)
 
     def hover_element(self, element):
+        """Hover element"""
         try:
             actions = ActionChains(self.driver)
             actions.move_to_element(element).perform()
@@ -61,6 +63,7 @@ class DriverClass:
             logger_instance.logger.exception(ERROR_IN_HOVERING)
 
     def return_to_tab_0(self):
+        """Return to the tab zero in chrome"""
         try:
             self.driver.switch_to.window(self.driver.window_handles[0])
             logger_instance.logger.info(RETURNED_TO_TAB)
@@ -68,12 +71,17 @@ class DriverClass:
             logger_instance.logger.exception(ERROR_SHIFTING_TAB)
 
     def quit_driver(self):
+        """To quit driver"""
         self.driver.quit()
         logger_instance.logger.info(DRIVER_QUIT)
 
 
 class ExtractArticlesClass(DriverClass):
     def extract_articles(self):
+        """
+            Start extraction of articles by fetching page from url, goes to next
+             page if required, make clicks and other stuff
+         """
         if self.navigate_to_url(ARTICLES_URL) is not None:
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
         more_articles = find_elements_by_given_filter(self.driver, "b-content-loop--layout_row", By.CLASS_NAME)
@@ -88,7 +96,12 @@ class ExtractArticlesClass(DriverClass):
 
 
 class ExtractEventsClass(DriverClass):
+    """Inherits driver class"""
     def extract_events(self):
+        """
+            Start extraction of events by fetching page from url, goes to next
+             page if required, make clicks and other stuff
+         """
         if self.navigate_to_url(EVENTS_URL) is not None:
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
         more_events = find_element_by_given_filter(self.driver, ".va-grid div a", By.CSS_SELECTOR)
@@ -104,6 +117,10 @@ class ExtractEventsClass(DriverClass):
 
 class ExtractActivitiesClass(DriverClass):
     def extract_articles(self):
+        """
+            Start extraction of activities by fetching page from url, goes to next
+             page if required, make clicks and other stuff
+         """
         if self.navigate_to_url(ACTIVITIES_URL) is not None:
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
         self.driver, self.response_data = list_activities(self.driver, self.response_data)
@@ -119,6 +136,10 @@ class ExtractActivitiesClass(DriverClass):
 
 class ExtractProductsClass(DriverClass):
     def extract_products(self):
+        """
+            Start extraction of products by fetching page from url, goes to next
+             page if required, make clicks and other stuff
+         """
         if self.navigate_to_url(ACTIVITIES_URL) is not None:
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
         wait = WebDriverWait(self.driver, 20)
@@ -164,6 +185,10 @@ class ExtractEmailsClass(DriverClass):
     email_list = []
 
     def extract_emails(self):
+        """
+            Start extraction of emails by fetching page from url, goes to next
+             page if required, make clicks and other stuff
+         """
         if self.navigate_to_url(ACTIVITIES_URL) is not None:
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
         wait = WebDriverWait(self.driver, 10)

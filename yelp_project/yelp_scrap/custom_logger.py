@@ -2,12 +2,14 @@ import logging
 
 
 class CustomLoggerClass:
+    """Custom logger for logging"""
     def __init__(self):
         self.logger = logging.getLogger("custom_logger")
         self.logger.setLevel(logging.DEBUG)
         self.create_file_handler()
 
     def create_file_handler(self):
+        """File handler to specify files for logging"""
         # Create a file handler
         file_handler = logging.FileHandler("custom.log")
 

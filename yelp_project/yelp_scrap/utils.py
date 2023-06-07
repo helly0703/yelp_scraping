@@ -8,15 +8,11 @@ from yelp_project import db, logger_instance
 from yelp_project.yelp_scrap.models import Article, Event, Activities
 
 
-class CustomException(Exception):
-    def __init__(self, data):
-        self.data = data
-
-
 class DBActions:
     def add_to_db(self, data_instance):
         db.session.add(data_instance)
         self.commit_session()
+
     def commit_session(self):
         db.session.commit()
 
@@ -26,20 +22,32 @@ class DBActions:
 
 
 def convert_str_to_date(string_date):
+    """
+    Convert string to date
+    """
     date_format = "%B %d, %Y"
     date_object = datetime.datetime.strptime(string_date, date_format).date()
     return date_object
 
 
 def find_elements_by_given_filter(container, class_name, filter_by):
+    """
+    Selenium function to find elements based on filter
+    """
     return container.find_elements(filter_by, class_name)
 
 
 def find_element_by_given_filter(container, class_name, filter_by):
+    """
+    Selenium function to find element based on filter
+    """
     return container.find_element(filter_by, class_name)
 
 
 def extract_articles_data(driver_instance, articles_data):
+    """
+    Extract articles data
+    """
     logger_instance.logger.info('Started fetching articles!')
     containers = find_elements_by_given_filter(driver_instance, ".c-card--has-image", By.CSS_SELECTOR)
     for container in containers:
@@ -69,6 +77,9 @@ def extract_articles_data(driver_instance, articles_data):
 
 
 def extract_events_data(driver_instance, events_data):
+    """
+    Extract event data
+    """
     logger_instance.logger.info('Started fetching events!')
 
     containers = find_elements_by_given_filter(driver_instance, ".card", By.CSS_SELECTOR)
@@ -103,6 +114,9 @@ def extract_events_data(driver_instance, events_data):
 
 
 def list_activities(driver_instance, activities_data):
+    """
+    Extract activities data
+    """
     logger_instance.logger.info('Started fetching activities!')
 
     elements = find_elements_by_given_filter(driver_instance, "container__09f24__YTiCU", By.CLASS_NAME)
@@ -133,6 +147,9 @@ def list_activities(driver_instance, activities_data):
 
 
 def json_to_csv(json_data, csv_file):
+    """
+    Store dictionary data to csv
+    """
     df = pd.DataFrame.from_dict(json_data)
     df.to_csv(csv_file, index=False)
 

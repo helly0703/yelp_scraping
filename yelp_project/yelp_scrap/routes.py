@@ -1,5 +1,3 @@
-import logging
-
 from flask import Blueprint, jsonify
 
 from yelp_project import logger_instance
@@ -98,5 +96,4 @@ def get_emails_csv():
     else:
         data_to_display = NO_EMAILS_FOUND
     logger_instance.logger.info(DATA_RECEIVED)
-
     return jsonify({EMAILS_CONSTANT: data_to_display})
