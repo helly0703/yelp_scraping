@@ -46,9 +46,31 @@ $ flask run
 
 ### Database related stuff
 
-## Packages used
+1. Install Postgres
 
-##### python-dotenv
+```shell
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 
-- [Package link](https://pypi.org/project/python-dotenv/)
-- It would be annoying to set environment variables every time we open our terminal, so we can set environment variables in a local file called **.env** instead and grab those variables using a Python library like python-dotenv.
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+
+sudo apt-get update
+
+sudo apt-get -y install postgresql # You can define specific version here
+```
+
+​		Please refer these links for more information
+
+​		https://www.postgresql.org/download/linux/ubuntu/
+
+​		https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-18-04
+
+ 2. Creating a database
+
+    You should be able to create a database in postgres using *createdb* command, the database name you can keep it as you want. This database connection details is to be stored in **.env** file where we will store secrets. This file is in gitognore (What's the meaning of adding it in git, It's Top secret ;) ) 
+
+    In that file there is this constant
+
+    ```
+    ENV_DEVELOPMENT_DB_URL='postgres://USERNAME:PASSWORD@localhost/DATABASE_NAME'
+    ```
+
