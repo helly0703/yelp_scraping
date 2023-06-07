@@ -8,19 +8,26 @@ from yelp_project import db, logger_instance
 from yelp_project.yelp_scrap.models import Article, Event, Activities
 
 
+class CustomException(Exception):
+    def __init__(self, data):
+        self.data = data
+
+
 class DBActions:
     def add_to_db(self, data_instance):
         db.session.add(data_instance)
         self.commit_session()
-
     def commit_session(self):
         db.session.commit()
 
+    def check_if_data_exists(self, table_name, key_name, value):
+        product_id = db.session.query(table_name).filter_by(**{key_name: value}).first()
+        return product_id
+
 
 def convert_str_to_date(string_date):
-    date_string = "May 2, 2023"
     date_format = "%B %d, %Y"
-    date_object = datetime.datetime.strptime(date_string, date_format).date()
+    date_object = datetime.datetime.strptime(string_date, date_format).date()
     return date_object
 
 
@@ -52,7 +59,9 @@ def extract_articles_data(driver_instance, articles_data):
         try:
             article_instance = Article(**articles_data[article_title.text])
             article_db = DBActions()
-            article_db.add_to_db(article_instance)
+            article_id = article_db.check_if_data_exists(Article, 'article_title', article_title.text)
+            if not article_id:
+                article_db.add_to_db(article_instance)
         except IntegrityError as E:
             logger_instance.logger.exception(f'{article_title.text} already exists!')
     logger_instance.logger.info('Finished fetching articles and storing in database!')
@@ -110,8 +119,10 @@ def list_activities(driver_instance, activities_data):
             }
             try:
                 activity_instance = Activities(**activities_data[activity_name])
-                event_db = DBActions()
-                event_db.add_to_db(activity_instance)
+                activity_db = DBActions()
+                activity_id = activity_db.check_if_data_exists(Activities, 'activity_name', activity_name)
+                if not activity_id:
+                    activity_db.add_to_db(activity_instance)
             except IntegrityError as E:
                 logger_instance.logger.info(f'{activity_name} already exists!')
             except Exception as E:
