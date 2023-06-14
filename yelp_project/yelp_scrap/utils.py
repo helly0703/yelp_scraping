@@ -25,9 +25,12 @@ def convert_str_to_date(string_date):
     """
     Convert string to date
     """
-    date_format = "%B %d, %Y"
-    date_object = datetime.datetime.strptime(string_date, date_format).date()
-    return date_object
+    try:
+        date_format = "%B %d, %Y"
+        date_object = datetime.datetime.strptime(string_date, date_format).date()
+        return date_object
+    except ValueError:
+        return None
 
 
 def find_elements_by_given_filter(container, class_name, filter_by):
@@ -92,7 +95,6 @@ def extract_events_data(driver_instance, events_data):
         event_type = find_element_by_given_filter(container, ".card_footer a", By.CSS_SELECTOR)
         event_date = event_body[0].text
         event_location = event_body[1].text
-
         events_data[event_name.text] = {
             'image_link': event_img.get_attribute('src'),
             'event_name': event_name.text,
