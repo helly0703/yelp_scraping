@@ -1,11 +1,12 @@
 import datetime
 
+from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 import pandas as pd
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from yelp_project import db, logger_instance
-from yelp_project.yelp_scrap.models import Article, Event, Activities
 
 
 class DBActions:
@@ -19,6 +20,12 @@ class DBActions:
     def check_if_data_exists(self, table_name, key_name, value):
         product_id = db.session.query(table_name).filter_by(**{key_name: value}).first()
         return product_id
+
+    def insert_into_mapping_table(self, insert_data):
+        result = db.session.execute(insert_data)
+        return result
+
+
 
 
 def convert_str_to_date(string_date):
@@ -44,7 +51,10 @@ def find_element_by_given_filter(container, class_name, filter_by):
     """
     Selenium function to find element based on filter
     """
-    return container.find_element(filter_by, class_name)
+    try:
+        return container.find_element(filter_by, class_name)
+    except NoSuchElementException:
+        return None
 
 
 def extract_articles_data(driver_instance, articles_data):
@@ -68,6 +78,7 @@ def extract_articles_data(driver_instance, articles_data):
             'article_tag': article_tag.text
         }
         try:
+            from yelp_project.yelp_scrap.models import Article
             article_instance = Article(**articles_data[article_title.text])
             article_db = DBActions()
             article_id = article_db.check_if_data_exists(Article, 'article_title', article_title.text)
@@ -104,6 +115,7 @@ def extract_events_data(driver_instance, events_data):
             'event_location': event_location
         }
         try:
+            from yelp_project.yelp_scrap.models import Event
             event_instance = Event(**events_data[event_name.text])
             event_db = DBActions()
             event_db.add_to_db(event_instance)
@@ -134,6 +146,7 @@ def list_activities(driver_instance, activities_data):
                 'activity_author': activity_by.text
             }
             try:
+                from yelp_project.yelp_scrap.models import Activities
                 activity_instance = Activities(**activities_data[activity_name])
                 activity_db = DBActions()
                 activity_id = activity_db.check_if_data_exists(Activities, 'activity_name', activity_name)

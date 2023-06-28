@@ -1,6 +1,9 @@
 from datetime import datetime
 
+from sqlalchemy import select, Column
+
 from yelp_project import db
+from yelp_project.yelp_scrap.utils import DBActions
 
 
 class Article(db.Model):
@@ -47,14 +50,120 @@ class Event(db.Model):
         return self.event_id
 
 
-class Product(db.Model):
-    __tablename__ = 'products'
+business_types = ['restaurants', 'home services', 'auto services', 'other']
 
-    product_id = db.Column(db.Integer, primary_key=True)
-    product_name = db.Column(db.String(50), unique=True)
+
+class Business(db.Model):
+    __tablename__ = 'business'
+
+    business_id = db.Column(db.Integer, primary_key=True)
+    business_name = db.Column(db.String(50), unique=True)
+    business_yelp_url = db.Column(db.Text)
+    business_type = db.Column(db.Enum(*business_types, name='business_types'))
+    business_ratings = db.Column(db.Float())
+    contact = db.Column(db.String(11))
+    location = db.Column(db.String())
+    business_image_url = db.Column(db.Text)
+    website = db.Column(db.Text)
+
+    # Define the many-to-many relationship with categories
+    categories = db.relationship('Category', secondary='business_categories')
+    highlights = db.relationship('Highlights', secondary='business_highlights')
+    features = db.relationship('Feature', secondary='business_features')
+    items = db.relationship('MenuItems', secondary='business_items')
 
     def __repr__(self):
-        return self.product_id
+        return self.business_id
+
+    def add_business_to_db(self, business_data, business_type):
+        business_instance = Business(business_name=business_data['restaurant_name'],
+                                     business_yelp_url=business_data['restaurant_link_element'],
+                                     business_type=business_type, business_ratings=business_data['ratings'],
+                                     business_image_url=business_data['restaurant_img_link'])
+        business_db = DBActions()
+        business = business_db.check_if_data_exists(Business, 'business_name',
+                                                    business_data['restaurant_name'])
+
+        if not business:
+            business_db.add_to_db(business_instance)
+            business = business_db.check_if_data_exists(Business, 'business_name',
+                                                        business_data['restaurant_name'])
+        return business.business_id
+
+    def add_business_categories(self, categories_list, business_id):
+        for category in categories_list:
+            cat_db = DBActions()
+            category_instance = cat_db.check_if_data_exists(Category, 'category_name',
+                                                            category)
+            if not category_instance:
+                cat_instance = Category(category_name=category)
+                cat_db.add_to_db(cat_instance)
+                category_instance = cat_db.check_if_data_exists(Category, 'category_name',
+                                                                category)
+            business_categories_insert = business_categories.insert().values(
+                business_id=business_id,
+                category_id=category_instance.category_id
+            )
+            select_business_category = select(business_categories).where(
+                (business_categories.columns.business_id == business_id) &
+                (business_categories.columns.category_id == category_instance.category_id))
+            new_db = DBActions()
+            result = new_db.insert_into_mapping_table(select_business_category)
+            if not result.fetchone():
+                new_db.insert_into_mapping_table(business_categories_insert)
+
+                # Commit the changes to the database
+                new_db.commit_session()
+
+    def add_business_features(self, features_list, business_id):
+        for feature in features_list:
+            feature_db = DBActions()
+            feature_instance = feature_db.check_if_data_exists(Feature, 'feature_name',
+                                                               feature)
+            if not feature_instance:
+                feature_instance = Feature(feature_name=feature)
+                feature_db.add_to_db(feature_instance)
+                feature_instance = feature_db.check_if_data_exists(Feature, 'feature_name',
+                                                                   feature)
+            business_features_insert = business_features.insert().values(
+                business_id=business_id,
+                feature_id=feature_instance.feature_id
+            )
+            select_business_feature = select(business_features).where(
+                (business_features.columns.business_id == business_id) &
+                (business_features.columns.feature_id == feature_instance.feature_id))
+            new_db = DBActions()
+            result = new_db.insert_into_mapping_table(select_business_feature)
+            if not result.fetchone():
+                new_db.insert_into_mapping_table(business_features_insert)
+
+                # Commit the changes to the database
+                new_db.commit_session()
+
+    def add_business_highlights(self, highlights_list, business_id):
+        for highlight in highlights_list:
+            highlight_db = DBActions()
+            highlight_instance = highlight_db.check_if_data_exists(Highlights, 'highlights_name',
+                                                                   highlight)
+            if not highlight_instance:
+                highlight_instance = Highlights(highlights_name=highlight)
+                highlight_db.add_to_db(highlight_instance)
+                highlight_instance = highlight_db.check_if_data_exists(Highlights, 'highlights_name',
+                                                                       highlight)
+            business_highlights_insert = business_highlights.insert().values(
+                business_id=business_id,
+                highlights_id=highlight_instance.highlights_id
+            )
+            select_business_highlights = select(business_highlights).where(
+                (business_highlights.columns.business_id == business_id) &
+                (business_highlights.columns.highlights_id == highlight_instance.highlights_id))
+            new_db = DBActions()
+            result = new_db.insert_into_mapping_table(select_business_highlights)
+            if not result.fetchone():
+                new_db.insert_into_mapping_table(business_highlights_insert)
+
+                # Commit the changes to the database
+                new_db.commit_session()
 
 
 class Category(db.Model):
@@ -62,11 +171,64 @@ class Category(db.Model):
 
     category_id = db.Column(db.Integer, primary_key=True)
     category_name = db.Column(db.String(50), unique=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.product_id'))
-    product = db.relationship('Product', backref='category')
 
     def __repr__(self):
         return self.category_id
+
+
+class Feature(db.Model):
+    __tablename__ = 'features'
+
+    feature_id = db.Column(db.Integer, primary_key=True)
+    feature_name = db.Column(db.String(50), unique=True)
+
+    def __repr__(self):
+        return self.feature_id
+
+
+class Highlights(db.Model):
+    __tablename__ = 'highlights'
+
+    highlights_id = db.Column(db.Integer, primary_key=True)
+    highlights_name = db.Column(db.String(50), unique=True)
+
+    def __repr__(self):
+        return self.highlights_id
+
+
+class MenuItems(db.Model):
+    __tablename__ = 'menu_items'
+
+    item_id = db.Column(db.Integer, primary_key=True)
+    item_name = db.Column(db.String(50), unique=True)
+    item_image_url = db.Column(db.Text)
+
+    def __repr__(self):
+        return self.item_id
+
+
+class Services(db.Model):
+    __tablename__ = 'services'
+
+    service_id = db.Column(db.Integer, primary_key=True)
+    service_name = db.Column(db.String(50), unique=True)
+
+    def __repr__(self):
+        return self.service_id
+
+
+class State(db.Model):
+    __tablename__ = 'state'
+
+    state_id = db.Column(db.Integer, primary_key=True)
+    state_name = db.Column(db.String(50), unique=True)
+
+
+class City(db.Model):
+    __tablename__ = 'city'
+
+    city_id = db.Column(db.Integer, primary_key=True)
+    city_name = db.Column(db.String(50), unique=True)
 
 
 class Emails(db.Model):
@@ -77,3 +239,35 @@ class Emails(db.Model):
 
     def __repr__(self):
         return self.email_id
+
+
+business_categories = db.Table(
+    'business_categories', db.Model.metadata,
+    db.Column('business_id', db.Integer, db.ForeignKey('business.business_id')),
+    db.Column('category_id', db.Integer, db.ForeignKey('category.category_id'))
+)
+
+# Define the association table for the many-to-many relationship between products and features
+business_features = db.Table(
+    'business_features', db.Model.metadata,
+    db.Column('business_id', db.Integer, db.ForeignKey('business.business_id')),
+    db.Column('feature_id', db.Integer, db.ForeignKey('features.feature_id'))
+)
+
+business_highlights = db.Table(
+    'business_highlights', db.Model.metadata,
+    db.Column('business_id', db.Integer, db.ForeignKey('business.business_id')),
+    db.Column('highlights_id', db.Integer, db.ForeignKey('highlights.highlights_id'))
+)
+
+business_items = db.Table(
+    'business_items', db.Model.metadata,
+    db.Column('business_id', db.Integer, db.ForeignKey('business.business_id')),
+    db.Column('item_id', db.Integer, db.ForeignKey('menu_items.item_id'))
+)
+
+business_services = db.Table(
+    'business_services', db.Model.metadata,
+    db.Column('business_id', db.Integer, db.ForeignKey('business.business_id')),
+    db.Column('service_id', db.Integer, db.ForeignKey('services.service_id'))
+)

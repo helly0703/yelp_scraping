@@ -14,7 +14,7 @@ yelp_bp = Blueprint('yelp_bp', __name__)
 def get_products():
     logger_instance.logger.warning('Products Scrapping api has been hit')
     products = ExtractProductsClass()
-    data_to_display = products.extract_products()
+    data_to_display = products.extract_restaurant_detail_page()
     logger_instance.logger.info(DATA_RECEIVED)
     return jsonify({'products': data_to_display})
 
@@ -22,7 +22,7 @@ def get_products():
 @yelp_bp.route('/products/download-csv', methods=['GET'])
 def get_products_csv():
     products = ExtractProductsClass()
-    data_to_display = products.extract_products()
+    data_to_display = products.extract_categories()
     json_to_csv(data_to_display, PRODUCTS_CSV_FILE)
     logger_instance.logger.info(DATA_RECEIVED)
     return jsonify({'products': data_to_display})
