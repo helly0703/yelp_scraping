@@ -13,6 +13,7 @@ This is the folder/file structure we have.
 │   └── /yelp_scrap
 │       ├── __init__.py
 │       ├── models.py            -------------> Business logic plus Database model
+│       ├── jobs.py            -------------> Tasks that are scheduled
 │       ├── routes.py            -------------> Defined the routes here
 │       ├── constants.py            -------------> All the constants here
 │       ├── custom_logger.py            -------------> Custom Logger file
@@ -71,5 +72,5 @@ sudo apt-get -y install postgresql # You can define specific version here
     ENV_DEVELOPMENT_DB_URL='postgres://USERNAME:PASSWORD@localhost/DATABASE_NAME'
     ```
 
-#### Sample .env
+
 

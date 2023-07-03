@@ -29,13 +29,13 @@ class DriverClass:
     """
 
     def __init__(self):
-        PROXY = "50.237.89.170:80"  # IP:PORT or HOST:PORT
+        # PROXY = "50.237.89.170:80"  # IP:PORT or HOST:PORT
 
         # """initialize driver"""
         options = ChromeOptions()
 
-        options.add_argument('--headless')  # Run Chrome in headless mode
-        options.add_argument('--proxy-server=%s' % PROXY)  # Add proxy for Chrome
+        # options.add_argument('--headless')  # Run Chrome in headless mode
+        # options.add_argument('--proxy-server=%s' % PROXY)  # Add proxy for Chrome
         self.response_data = {}
         try:
             self.driver = Chrome(executable_path=CHROME_EXECUTABLE_PATH, options=options)
@@ -291,10 +291,9 @@ class ExtractProductsClass(DriverClass):
         while (link_for_next_page := find_element_by_given_filter(next_links,
                                                                   "next-link",
                                                                   By.CLASS_NAME)) is not None:
-            delay = random.randint(3, 7)
-            time.sleep(delay)
             action_chains = ActionChains(self.driver)
             action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
+            time.sleep(5)
             self.extract_restaurant_data(business_type='restaurants')
         self.driver.quit()
 
@@ -373,6 +372,7 @@ class ExtractProductsClass(DriverClass):
             time.sleep(delay)
             action_chains = ActionChains(self.driver)
             action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
+            time.sleep(5)
             self.extract_restaurant_data(business_type='home services')
         self.driver.quit()
 
@@ -395,6 +395,7 @@ class ExtractProductsClass(DriverClass):
             time.sleep(delay)
             action_chains = ActionChains(self.driver)
             action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
+            time.sleep(5)
             self.extract_restaurant_data(business_type='auto services')
         self.driver.quit()
 
