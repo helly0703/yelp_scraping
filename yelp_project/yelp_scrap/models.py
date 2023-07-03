@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import select, Column
+from sqlalchemy import select
 
 from yelp_project import db
 from yelp_project.yelp_scrap.utils import DBActions
@@ -61,8 +61,8 @@ class Business(db.Model):
     business_yelp_url = db.Column(db.Text)
     business_type = db.Column(db.Enum(*business_types, name='business_types'))
     business_ratings = db.Column(db.Float())
-    contact = db.Column(db.String(11))
-    location = db.Column(db.String())
+    contact = db.Column(db.String(15))
+    location = db.Column(db.String(50))
     business_image_url = db.Column(db.Text)
     website = db.Column(db.Text)
 
@@ -74,6 +74,15 @@ class Business(db.Model):
 
     def __repr__(self):
         return self.business_id
+
+    def session_commit(self):
+        db.session.commit()
+
+    def get_business_instance(self, business_name):
+        business_db = DBActions()
+        business = business_db.check_if_data_exists(Business, 'business_name',
+                                                    business_name)
+        return business.business_id if business else None
 
     def add_business_to_db(self, business_data, business_type):
         business_instance = Business(business_name=business_data['restaurant_name'],
@@ -116,29 +125,32 @@ class Business(db.Model):
                 new_db.commit_session()
 
     def add_business_features(self, features_list, business_id):
-        for feature in features_list:
-            feature_db = DBActions()
-            feature_instance = feature_db.check_if_data_exists(Feature, 'feature_name',
-                                                               feature)
-            if not feature_instance:
-                feature_instance = Feature(feature_name=feature)
-                feature_db.add_to_db(feature_instance)
+        try:
+            for feature in features_list:
+                feature_db = DBActions()
                 feature_instance = feature_db.check_if_data_exists(Feature, 'feature_name',
                                                                    feature)
-            business_features_insert = business_features.insert().values(
-                business_id=business_id,
-                feature_id=feature_instance.feature_id
-            )
-            select_business_feature = select(business_features).where(
-                (business_features.columns.business_id == business_id) &
-                (business_features.columns.feature_id == feature_instance.feature_id))
-            new_db = DBActions()
-            result = new_db.insert_into_mapping_table(select_business_feature)
-            if not result.fetchone():
-                new_db.insert_into_mapping_table(business_features_insert)
+                if not feature_instance:
+                    feature_instance = Feature(feature_name=feature)
+                    feature_db.add_to_db(feature_instance)
+                    feature_instance = feature_db.check_if_data_exists(Feature, 'feature_name',
+                                                                       feature)
+                business_features_insert = business_features.insert().values(
+                    business_id=business_id,
+                    feature_id=feature_instance.feature_id
+                )
+                select_business_feature = select(business_features).where(
+                    (business_features.columns.business_id == business_id) &
+                    (business_features.columns.feature_id == feature_instance.feature_id))
+                new_db = DBActions()
+                result = new_db.insert_into_mapping_table(select_business_feature)
+                if not result.fetchone():
+                    new_db.insert_into_mapping_table(business_features_insert)
 
-                # Commit the changes to the database
-                new_db.commit_session()
+                    # Commit the changes to the database
+                    new_db.commit_session()
+        except Exception:
+            pass
 
     def add_business_highlights(self, highlights_list, business_id):
         for highlight in highlights_list:
@@ -165,6 +177,35 @@ class Business(db.Model):
                 # Commit the changes to the database
                 new_db.commit_session()
 
+    def add_business_menu_items(self, menu_list, business_id):
+        for items in menu_list:
+            items_db = DBActions()
+            items_instance = items_db.check_if_data_exists(MenuItems, 'item_name',
+                                                           items['items_name'])
+            if not items_instance:
+                items_instance = MenuItems(item_name=items['items_name'], item_image_url=items['image_url'])
+                items_db.add_to_db(items_instance)
+                items_instance = items_db.check_if_data_exists(MenuItems, 'item_name',
+                                                               items['items_name'])
+            business_items_insert = business_items.insert().values(
+                business_id=business_id,
+                item_id=items_instance.item_id
+            )
+            select_business_items = select(business_items).where(
+                (business_items.columns.business_id == business_id) &
+                (business_items.columns.item_id == items_instance.item_id))
+            new_db = DBActions()
+            result = new_db.insert_into_mapping_table(select_business_items)
+            if not result.fetchone():
+                new_db.insert_into_mapping_table(business_items_insert)
+
+                # Commit the changes to the database
+                new_db.commit_session()
+
+    def filter_by_business_types(self, business_type):
+        business_db = DBActions()
+        business = business_db.get_data(Business, {'business_type': business_type})
+        return business
 
 class Category(db.Model):
     __tablename__ = 'category'
@@ -180,7 +221,7 @@ class Feature(db.Model):
     __tablename__ = 'features'
 
     feature_id = db.Column(db.Integer, primary_key=True)
-    feature_name = db.Column(db.String(50), unique=True)
+    feature_name = db.Column(db.String(100), unique=True)
 
     def __repr__(self):
         return self.feature_id

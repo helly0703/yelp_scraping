@@ -1,6 +1,7 @@
 import re
+import time
 
-from selenium.common import NoSuchElementException
+from selenium.common import NoSuchElementException, TimeoutException
 from selenium.webdriver.support.wait import WebDriverWait
 from sqlalchemy.exc import IntegrityError
 from undetected_chromedriver import Chrome, ChromeOptions
@@ -29,7 +30,7 @@ class DriverClass:
     """
 
     def __init__(self):
-        # PROXY = "167.249.29.218:999"  # IP:PORT or HOST:PORT
+        # PROXY = "50.237.89.170:80"  # IP:PORT or HOST:PORT
         #
         # """initialize driver"""
         options = ChromeOptions()
@@ -153,7 +154,6 @@ class ExtractProductsClass(DriverClass):
 
     @staticmethod
     def add_category_to_db(category_name):
-        print(category_name)
         try:
             category_instance = Category(category_name=category_name)
             category_db = DBActions()
@@ -182,7 +182,6 @@ class ExtractProductsClass(DriverClass):
 
     @staticmethod
     def add_restaurant_to_db(restaurant_data, business_type):
-        print(restaurant_data)
         try:
             business_object = Business()
             business_id = business_object.add_business_to_db(restaurant_data, business_type)
@@ -248,12 +247,13 @@ class ExtractProductsClass(DriverClass):
         self.quit_driver()
         return self.response_data
 
-    def extract_restaurant_data(self):
+    def extract_restaurant_data(self, business_type):
         wait = WebDriverWait(self.driver, 40)
         wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "container__09f24__mpR8_")))
         elements = find_elements_by_given_filter(self.driver, "container__09f24__mpR8_", By.CLASS_NAME)
         restaurant_data = {}
         for element in elements:
+            self.driver.execute_script("window.scrollBy(0,document.body.scrollHeight)")
             restaurant_image_element = find_element_by_given_filter(element, "css-w8rns", By.CLASS_NAME)
             restaurant_image_element_link = find_element_by_given_filter(restaurant_image_element, "img", By.TAG_NAME)
             restaurant_data['restaurant_img_link'] = restaurant_image_element_link.get_attribute('src')
@@ -275,7 +275,7 @@ class ExtractProductsClass(DriverClass):
             restaurant_data['features_list'] = [feature.text for feature in
                                                 find_elements_by_given_filter(element, "css-1oibaro", By.CLASS_NAME)]
             if restaurant_data['restaurant_name'] != '':
-                self.add_restaurant_to_db(restaurant_data, 'restaurants')
+                self.add_restaurant_to_db(restaurant_data, business_type)
 
     def extract_restaurants_page(self):
         if self.navigate_to_url(ACTIVITIES_URL) is not None:
@@ -285,7 +285,7 @@ class ExtractProductsClass(DriverClass):
         elements = find_elements_by_given_filter(self.driver, "header-link_anchor__09f24__eCD4u", By.CLASS_NAME)
 
         self.click_and_open_new_tab(elements[0])
-        self.extract_restaurant_data()
+        self.extract_restaurant_data(business_type='restaurants')
         wait = WebDriverWait(self.driver, 20)
         wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "pagination__09f24__VRjN4")))
         next_links = find_element_by_given_filter(self.driver, "pagination__09f24__VRjN4", By.CLASS_NAME)
@@ -294,38 +294,130 @@ class ExtractProductsClass(DriverClass):
                                                                   By.CLASS_NAME)) is not None:
             action_chains = ActionChains(self.driver)
             action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
-            self.extract_restaurant_data()
+            self.extract_restaurant_data(business_type='restaurants')
         self.driver.quit()
 
-    def extract_restaurant_detail_page(self):
-        if self.navigate_to_url('https://www.yelp.com/biz/panera-bread-daly-city') is not None:
+    def extract_business_detail_page(self, business_type):
+        all_business_object = Business()
+        business_type_objects = all_business_object.filter_by_business_types(business_type)
+        for business_obj in business_type_objects:
+            if self.navigate_to_url(business_obj.business_yelp_url) is not None:
+                return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
+            wait = WebDriverWait(self.driver, 20)
+            menu_list = []
+            try:
+                wait.until(EC.visibility_of_element_located((By.XPATH, "//section[@aria-label='Menu']")))
+                menu_main_section = find_element_by_given_filter(self.driver, "//section[@aria-label='Menu']", By.XPATH)
+                menu_section = find_elements_by_given_filter(menu_main_section, "css-gnym5v", By.CLASS_NAME)
+                for dishes in menu_section:
+                    dish_img = find_element_by_given_filter(dishes, "img", By.TAG_NAME)
+                    dish = find_element_by_given_filter(dishes, "p", By.TAG_NAME)
+                    menu_list.append({'items_name': dish.text, 'image_url': dish_img.get_attribute('src')})
+            except TimeoutException:
+                pass
+            features_list = []
+            try:
+                ammenities_section = find_element_by_given_filter(self.driver,
+                                                                  "//section[@aria-label='Amenities and More']",
+                                                                  By.XPATH)
+                more_ammenities = find_element_by_given_filter(ammenities_section, "css-1wayfxy", By.CLASS_NAME)
+                if more_ammenities:
+                    action_chains = ActionChains(self.driver)
+                    action_chains.key_down(Keys.CONTROL).click(more_ammenities).key_up(Keys.CONTROL).perform()
+                    features_list_elements = find_elements_by_given_filter(ammenities_section, "css-1p9ibgf",
+                                                                           By.CLASS_NAME)
+                    for feature in features_list_elements:
+                        features_list.append(feature.text)
+            except TimeoutException:
+                pass
+            contact_div_element = find_elements_by_given_filter(self.driver, "css-xp8w2v", By.CLASS_NAME)
+            business_object = Business()
+            business_instance = business_object.query.filter_by(business_id=business_obj.business_id).first()
+            for div in contact_div_element:
+                try:
+                    all_elements = find_elements_by_given_filter(div, "css-1vhakgw", By.CLASS_NAME)
+                    for element in all_elements:
+                        if 'Business website' in element.text:
+                            business_instance.website = element.text.split('Business website')
+                        elif 'Phone number' in element.text:
+                            business_instance.contact = element.text.split('Phone number')
+                        elif 'Get Directions' in element.text:
+                            business_instance.location = element.text.split('Get Directions')
+                    break
+                except Exception as e:
+                    pass
+            business_instance.add_business_features(features_list, business_obj.business_id)
+            business_instance.add_business_menu_items(menu_list, business_obj.business_id)
+            business_instance.session_commit()
+        self.driver.quit()
+
+    def extract_home_services_page(self):
+        if self.navigate_to_url(ACTIVITIES_URL) is not None:
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
+        wait = WebDriverWait(self.driver, 40)
+        wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "header-link_anchor__09f24__eCD4u")))
+        elements = find_elements_by_given_filter(self.driver, "header-link_anchor__09f24__eCD4u", By.CLASS_NAME)
+
+        self.click_and_open_new_tab(elements[1])
+        self.extract_restaurant_data(business_type='home services')
         wait = WebDriverWait(self.driver, 20)
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//section[@aria-label='Menu']")))
-        menu_main_section = find_element_by_given_filter(self.driver, "//section[@aria-label='Menu']", By.XPATH)
-        menu_section = find_elements_by_given_filter(menu_main_section, "css-gnym5v", By.CLASS_NAME)
-        for dishes in menu_section:
-            dish = find_element_by_given_filter(dishes, "p", By.TAG_NAME)
-            print(dish.text)
-
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//section[@aria-label='Menu']")))
-        ammenities_section = find_element_by_given_filter(self.driver, "//section[@aria-label='Amenities and More']",
-                                                          By.XPATH)
-        more_ammenities = find_element_by_given_filter(ammenities_section, "css-1wayfxy", By.CLASS_NAME)
-        if more_ammenities:
+        wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "pagination__09f24__VRjN4")))
+        next_links = find_element_by_given_filter(self.driver, "pagination__09f24__VRjN4", By.CLASS_NAME)
+        while (link_for_next_page := find_element_by_given_filter(next_links,
+                                                                  "next-link",
+                                                                  By.CLASS_NAME)) is not None:
             action_chains = ActionChains(self.driver)
-            action_chains.key_down(Keys.CONTROL).click(more_ammenities).key_up(Keys.CONTROL).perform()
-            features_list_elements = find_elements_by_given_filter(ammenities_section, "css-1p9ibgf", By.CLASS_NAME)
-            for feature in features_list_elements:
-                print(feature.text)
+            action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
+            self.extract_restaurant_data(business_type='home services')
+        self.driver.quit()
 
-        contact_div_element = find_element_by_given_filter(self.driver, "css-xp8w2v", By.CLASS_NAME)
-        all_elements = find_elements_by_given_filter(contact_div_element, "css-1p9ibgf", By.CLASS_NAME)
-        website_link = all_elements[0].text
-        contact = all_elements[1].text
-        location_element = find_element_by_given_filter(contact_div_element, "css-qyp8bo", By.CLASS_NAME)
-        location = location_element.text
+    def extract_auto_services_page(self):
+        if self.navigate_to_url(ACTIVITIES_URL) is not None:
+            return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
+        wait = WebDriverWait(self.driver, 40)
+        wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "header-link_anchor__09f24__eCD4u")))
+        elements = find_elements_by_given_filter(self.driver, "header-link_anchor__09f24__eCD4u", By.CLASS_NAME)
 
+        self.click_and_open_new_tab(elements[2])
+        self.extract_restaurant_data(business_type='auto services')
+        wait = WebDriverWait(self.driver, 20)
+        wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "pagination__09f24__VRjN4")))
+        next_links = find_element_by_given_filter(self.driver, "pagination__09f24__VRjN4", By.CLASS_NAME)
+        while (link_for_next_page := find_element_by_given_filter(next_links,
+                                                                  "next-link",
+                                                                  By.CLASS_NAME)) is not None:
+            action_chains = ActionChains(self.driver)
+            action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
+            self.extract_restaurant_data(business_type='auto services')
+        self.driver.quit()
+
+    def extract_other_services_page(self):
+        if self.navigate_to_url(ACTIVITIES_URL) is not None:
+            return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
+        wait = WebDriverWait(self.driver, 40)
+        wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "header-link_anchor__09f24__eCD4u")))
+        elements = find_elements_by_given_filter(self.driver, "header-link_anchor__09f24__eCD4u", By.CLASS_NAME)
+        list_to_follow = []
+        self.hover_element(elements[3])
+        menu = find_elements_by_given_filter(self.driver, "menu-item__09f24__GEQP6", By.CLASS_NAME)
+        for i in menu:
+            to_follow = i.get_attribute('href')
+            if to_follow != '':
+                list_to_follow.append(to_follow)
+        for url_to_follow in list_to_follow:
+            if self.navigate_to_url(url_to_follow) is not None:
+                return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
+            self.extract_restaurant_data(business_type='other')
+            wait = WebDriverWait(self.driver, 20)
+            wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "pagination__09f24__VRjN4")))
+            next_links = find_element_by_given_filter(self.driver, "pagination__09f24__VRjN4", By.CLASS_NAME)
+            while (link_for_next_page := find_element_by_given_filter(next_links,
+                                                                      "next-link",
+                                                                      By.CLASS_NAME)) is not None:
+                action_chains = ActionChains(self.driver)
+                action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
+                time.sleep(5)
+                self.extract_restaurant_data(business_type='other')
         self.driver.quit()
 
 

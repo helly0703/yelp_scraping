@@ -3,6 +3,7 @@ from flask_migrate import Migrate
 
 from yelp_project import create_app, db
 
+
 app = create_app()
 migrate = Migrate(app, db)
 

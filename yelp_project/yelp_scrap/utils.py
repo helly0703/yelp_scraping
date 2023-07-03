@@ -3,7 +3,6 @@ import datetime
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 import pandas as pd
-from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from yelp_project import db, logger_instance
@@ -24,6 +23,10 @@ class DBActions:
     def insert_into_mapping_table(self, insert_data):
         result = db.session.execute(insert_data)
         return result
+
+    def get_data(self, table_name,filter_params):
+        products = db.session.query(table_name).filter_by(**filter_params)
+        return products
 
 
 

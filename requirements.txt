@@ -7,3 +7,4 @@ Flask-Migrate==4.0.4
 python-dotenv==1.0.0
 psycopg2-binary==2.9.6
 SQLAlchemy==2.0.15
+Flask-APScheduler==1.12.4
