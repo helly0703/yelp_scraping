@@ -1,3 +1,4 @@
+import random
 import re
 import time
 
@@ -292,6 +293,8 @@ class ExtractProductsClass(DriverClass):
         while (link_for_next_page := find_element_by_given_filter(next_links,
                                                                   "next-link",
                                                                   By.CLASS_NAME)) is not None:
+            delay = random.randint(3, 7)
+            time.sleep(delay)
             action_chains = ActionChains(self.driver)
             action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
             self.extract_restaurant_data(business_type='restaurants')
@@ -301,6 +304,8 @@ class ExtractProductsClass(DriverClass):
         all_business_object = Business()
         business_type_objects = all_business_object.filter_by_business_types(business_type)
         for business_obj in business_type_objects:
+            delay = random.randint(3, 7)
+            time.sleep(delay)
             if self.navigate_to_url(business_obj.business_yelp_url) is not None:
                 return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
             wait = WebDriverWait(self.driver, 20)
@@ -366,6 +371,8 @@ class ExtractProductsClass(DriverClass):
         while (link_for_next_page := find_element_by_given_filter(next_links,
                                                                   "next-link",
                                                                   By.CLASS_NAME)) is not None:
+            delay = random.randint(3, 7)
+            time.sleep(delay)
             action_chains = ActionChains(self.driver)
             action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
             self.extract_restaurant_data(business_type='home services')
@@ -386,6 +393,8 @@ class ExtractProductsClass(DriverClass):
         while (link_for_next_page := find_element_by_given_filter(next_links,
                                                                   "next-link",
                                                                   By.CLASS_NAME)) is not None:
+            delay = random.randint(3, 7)
+            time.sleep(delay)
             action_chains = ActionChains(self.driver)
             action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
             self.extract_restaurant_data(business_type='auto services')
@@ -414,6 +423,8 @@ class ExtractProductsClass(DriverClass):
             while (link_for_next_page := find_element_by_given_filter(next_links,
                                                                       "next-link",
                                                                       By.CLASS_NAME)) is not None:
+                delay = random.randint(3, 7)
+                time.sleep(delay)
                 action_chains = ActionChains(self.driver)
                 action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
                 time.sleep(5)
