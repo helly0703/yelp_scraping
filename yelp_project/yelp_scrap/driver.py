@@ -2,15 +2,13 @@ import random
 import re
 import time
 
-from selenium.common import NoSuchElementException, TimeoutException
+from selenium.common import TimeoutException
 from selenium.webdriver.support.wait import WebDriverWait
 from sqlalchemy.exc import IntegrityError
 from undetected_chromedriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.proxy import Proxy, ProxyType
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from yelp_project import logger_instance
 from yelp_project.yelp_scrap.constants import (ARTICLES_URL, CHROME_EXECUTABLE_PATH, EVENTS_URL, ACTIVITIES_URL,
@@ -18,7 +16,7 @@ from yelp_project.yelp_scrap.constants import (ARTICLES_URL, CHROME_EXECUTABLE_P
                                                PAGE_NOT_FOUND, TAB_OPENED, ERROR_IN_NEW_TAB, ELEMENT_HOVERED,
                                                ERROR_IN_HOVERING, RETURNED_TO_TAB, ERROR_SHIFTING_TAB, DRIVER_QUIT,
                                                STATUS_CODE, MSG, CONNECTION_INTERRUPTED)
-from yelp_project.yelp_scrap.models import Business, Category, Emails, Feature, business_categories
+from yelp_project.yelp_scrap.models import Business, Category, Emails, Feature
 from yelp_project.yelp_scrap.utils import (extract_articles_data, extract_events_data, list_activities,
                                            find_elements_by_given_filter,
                                            find_element_by_given_filter, DBActions)
@@ -31,13 +29,13 @@ class DriverClass:
     """
 
     def __init__(self):
-        # PROXY = "50.237.89.170:80"  # IP:PORT or HOST:PORT
-        #
+        PROXY = "50.237.89.170:80"  # IP:PORT or HOST:PORT
+
         # """initialize driver"""
         options = ChromeOptions()
-        #
-        # # options.add_argument('--headless')  # Run Chrome in headless mode
-        # options.add_argument('--proxy-server=%s' % PROXY)  # Run Chrome in headless mode
+
+        options.add_argument('--headless')  # Run Chrome in headless mode
+        options.add_argument('--proxy-server=%s' % PROXY)  # Add proxy for Chrome
         self.response_data = {}
         try:
             self.driver = Chrome(executable_path=CHROME_EXECUTABLE_PATH, options=options)
