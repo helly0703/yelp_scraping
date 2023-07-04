@@ -19,7 +19,7 @@ from yelp_project.yelp_scrap.constants import (ARTICLES_URL, CHROME_EXECUTABLE_P
 from yelp_project.yelp_scrap.models import Business, Category, Emails, Feature
 from yelp_project.yelp_scrap.utils import (extract_articles_data, extract_events_data, list_activities,
                                            find_elements_by_given_filter,
-                                           find_element_by_given_filter, DBActions)
+                                           find_element_by_given_filter, DBActions, get_proxies)
 from selenium.webdriver.support import expected_conditions as EC
 
 
@@ -29,18 +29,20 @@ class DriverClass:
     """
 
     def __init__(self):
-        # PROXY = "50.237.89.170:80"  # IP:PORT or HOST:PORT
-
-        # """initialize driver"""
-        options = ChromeOptions()
-
-        # options.add_argument('--headless')  # Run Chrome in headless mode
-        # options.add_argument('--proxy-server=%s' % PROXY)  # Add proxy for Chrome
+        """initialize driver"""
         self.response_data = {}
-        try:
-            self.driver = Chrome(executable_path=CHROME_EXECUTABLE_PATH, options=options)
-        except Exception as E:
-            logger_instance.logger.exception(DRIVER_CREATION_FAILURE)
+        options = ChromeOptions()
+        # options.add_argument('--headless')
+
+        proxies = get_proxies()
+        for proxy in proxies:
+            # PROXY = "50.237.89.170:80"  # IP:PORT or HOST:PORT
+            options.add_argument('--proxy-server=%s' % proxy)
+            try:
+                self.driver = Chrome(executable_path=CHROME_EXECUTABLE_PATH, options=options)
+                break
+            except Exception as E:
+                logger_instance.logger.exception(DRIVER_CREATION_FAILURE)
 
     def navigate_to_url(self, url):
         """Navigate to the url"""

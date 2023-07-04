@@ -55,7 +55,8 @@ def find_element_by_given_filter(container, class_name, filter_by):
     Selenium function to find element based on filter
     """
     try:
-        return container.find_element(filter_by, class_name)
+        if container is not None:
+            return container.find_element(filter_by, class_name)
     except NoSuchElementException:
         return None
 
@@ -184,3 +185,9 @@ def dict_to_csv(data_dict, csv_file):
 
     # Write the DataFrame to a CSV file
     df.to_csv(csv_file)
+
+
+def get_proxies():
+    with open('/media/root357/Data/Yelp/yelp_scraping/yelp_project/yelp_scrap/list_proxy.txt', 'r') as file:
+        proxies = file.readlines()
+    return proxies
