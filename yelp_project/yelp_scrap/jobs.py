@@ -14,7 +14,7 @@ def extract_restaurants_list():
     products = ExtractProductsClass()
     data_to_display = products.extract_restaurants_page()
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'products': data_to_display})
+    return jsonify({'data': data_to_display})
 
 
 def extract_restaurant_details():
@@ -25,7 +25,7 @@ def extract_restaurant_details():
     products = ExtractProductsClass()
     data_to_display = products.extract_business_detail_page('restaurants')
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'products': data_to_display})
+    return jsonify({'message': data_to_display})
 
 
 def extract_home_services_list():
@@ -36,7 +36,7 @@ def extract_home_services_list():
     products = ExtractProductsClass()
     data_to_display = products.extract_home_services_page()
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'products': data_to_display})
+    return jsonify({'data': data_to_display})
 
 
 def extract_home_services_details():
@@ -47,7 +47,7 @@ def extract_home_services_details():
     products = ExtractProductsClass()
     data_to_display = products.extract_business_detail_page('home services')
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'products': data_to_display})
+    return jsonify({'message': data_to_display})
 
 
 def extract_auto_services_list():
@@ -58,7 +58,7 @@ def extract_auto_services_list():
     products = ExtractProductsClass()
     data_to_display = products.extract_auto_services_page()
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'products': data_to_display})
+    return jsonify({'data': data_to_display})
 
 
 def extract_auto_services_details():
@@ -69,7 +69,7 @@ def extract_auto_services_details():
     products = ExtractProductsClass()
     data_to_display = products.extract_business_detail_page('auto services')
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'products': data_to_display})
+    return jsonify({'message': data_to_display})
 
 
 def extract_other_services_list():
@@ -80,7 +80,7 @@ def extract_other_services_list():
     products = ExtractProductsClass()
     data_to_display = products.extract_other_services_page()
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'products': data_to_display})
+    return jsonify({'data': data_to_display})
 
 
 def extract_other_services_details():
@@ -91,7 +91,7 @@ def extract_other_services_details():
     products = ExtractProductsClass()
     data_to_display = products.extract_business_detail_page('other')
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'products': data_to_display})
+    return jsonify({'message': data_to_display})
 
 
 def extract_categories():
@@ -101,7 +101,7 @@ def extract_categories():
     products = ExtractProductsClass()
     data_to_display = products.extract_categories()
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'products': data_to_display})
+    return jsonify({'data': data_to_display})
 
 
 def extract_recent_activities():
@@ -111,7 +111,7 @@ def extract_recent_activities():
     activities = ExtractActivitiesClass()
     data_to_display = activities.extract_articles()
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'activities': data_to_display})
+    return jsonify({'data': data_to_display})
 
 
 def extract_events():
@@ -121,7 +121,7 @@ def extract_events():
     events = ExtractEventsClass()
     data_to_display = events.extract_events()
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'events': data_to_display})
+    return jsonify({'data': data_to_display})
 
 
 def extract_articles():
@@ -131,7 +131,7 @@ def extract_articles():
     articles = ExtractArticlesClass()
     data_to_display = articles.extract_articles()
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({'articles': data_to_display})
+    return jsonify({'data': data_to_display})
 
 
 def extract_emails():
@@ -141,4 +141,4 @@ def extract_emails():
     emails = ExtractEmailsClass()
     data_to_display = emails.extract_emails()
     logger_instance.logger.info(DATA_RECEIVED)
-    return jsonify({EMAILS_CONSTANT: data_to_display})
+    return jsonify({'data': data_to_display})

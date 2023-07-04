@@ -249,36 +249,43 @@ class ExtractProductsClass(DriverClass):
         return self.response_data
 
     def extract_restaurant_data(self, business_type):
+        restaurants = []
         wait = WebDriverWait(self.driver, 40)
         wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "container__09f24__mpR8_")))
         elements = find_elements_by_given_filter(self.driver, "container__09f24__mpR8_", By.CLASS_NAME)
         restaurant_data = {}
         for element in elements:
-            self.driver.execute_script("window.scrollBy(0,document.body.scrollHeight)")
-            restaurant_image_element = find_element_by_given_filter(element, "css-w8rns", By.CLASS_NAME)
-            restaurant_image_element_link = find_element_by_given_filter(restaurant_image_element, "img", By.TAG_NAME)
-            restaurant_data['restaurant_img_link'] = restaurant_image_element_link.get_attribute('src')
-            restaurant_name_element = find_element_by_given_filter(element, "css-19v1rkv",
-                                                                   By.CLASS_NAME)
-            restaurant_data['restaurant_name'] = restaurant_name_element.text  # Restaurant name
-            restaurant_data['restaurant_link_element'] = restaurant_name_element.get_attribute('href')  # Restaurant url
-            ratings_element = find_element_by_given_filter(element, "five-stars--regular__09f24__DgBNj",
-                                                           By.CLASS_NAME)
-            restaurant_data['ratings'] = float(ratings_element.get_attribute(
-                'aria-label').split()[0]) if ratings_element is not None else 0  # Ratings
-            restaurant_data['category_list'] = [category.text for category in
-                                                find_elements_by_given_filter(element, "css-11bijt4",
-                                                                              By.CLASS_NAME)]  # Restaurant categories
-            restaurant_data['highlights_list'] = [highlights.text for highlights in
-                                                  find_elements_by_given_filter(element,
-                                                                                "mobile-text-medium__09f24__MZ1v6",
-                                                                                By.CLASS_NAME)]  # Restaurant highlights
-            restaurant_data['features_list'] = [feature.text for feature in
-                                                find_elements_by_given_filter(element, "css-1oibaro", By.CLASS_NAME)]
-            if restaurant_data['restaurant_name'] != '':
-                self.add_restaurant_to_db(restaurant_data, business_type)
+            try:
+                self.driver.execute_script("window.scrollBy(0,document.body.scrollHeight)")
+                restaurant_image_element = find_element_by_given_filter(element, "css-w8rns", By.CLASS_NAME)
+                restaurant_image_element_link = find_element_by_given_filter(restaurant_image_element, "img", By.TAG_NAME)
+                restaurant_data['restaurant_img_link'] = restaurant_image_element_link.get_attribute('src')
+                restaurant_name_element = find_element_by_given_filter(element, "css-19v1rkv",
+                                                                       By.CLASS_NAME)
+                restaurant_data['restaurant_name'] = restaurant_name_element.text  # Restaurant name
+                restaurant_data['restaurant_link_element'] = restaurant_name_element.get_attribute('href')  # Restaurant url
+                ratings_element = find_element_by_given_filter(element, "five-stars--regular__09f24__DgBNj",
+                                                               By.CLASS_NAME)
+                restaurant_data['ratings'] = float(ratings_element.get_attribute(
+                    'aria-label').split()[0]) if ratings_element is not None else 0  # Ratings
+                restaurant_data['category_list'] = [category.text for category in
+                                                    find_elements_by_given_filter(element, "css-11bijt4",
+                                                                                  By.CLASS_NAME)]  # Restaurant categories
+                restaurant_data['highlights_list'] = [highlights.text for highlights in
+                                                      find_elements_by_given_filter(element,
+                                                                                    "mobile-text-medium__09f24__MZ1v6",
+                                                                                    By.CLASS_NAME)]  # Restaurant highlights
+                restaurant_data['features_list'] = [feature.text for feature in
+                                                    find_elements_by_given_filter(element, "css-1oibaro", By.CLASS_NAME)]
+                if restaurant_data['restaurant_name'] != '':
+                    restaurants.append(restaurant_data)
+                    self.add_restaurant_to_db(restaurant_data, business_type)
+            except Exception:
+                pass
+        return restaurants
 
     def extract_restaurants_page(self):
+        restaurants_data = []
         if self.navigate_to_url(ACTIVITIES_URL) is not None:
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
         wait = WebDriverWait(self.driver, 40)
@@ -286,7 +293,7 @@ class ExtractProductsClass(DriverClass):
         elements = find_elements_by_given_filter(self.driver, "header-link_anchor__09f24__eCD4u", By.CLASS_NAME)
 
         self.click_and_open_new_tab(elements[0])
-        self.extract_restaurant_data(business_type='restaurants')
+        restaurants_data.extend(self.extract_restaurant_data(business_type='restaurants'))
         wait = WebDriverWait(self.driver, 20)
         wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "pagination__09f24__VRjN4")))
         next_links = find_element_by_given_filter(self.driver, "pagination__09f24__VRjN4", By.CLASS_NAME)
@@ -296,8 +303,9 @@ class ExtractProductsClass(DriverClass):
             action_chains = ActionChains(self.driver)
             action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
             time.sleep(5)
-            self.extract_restaurant_data(business_type='restaurants')
+            restaurants_data.extend(self.extract_restaurant_data(business_type='restaurants'))
         self.driver.quit()
+        return restaurants_data
 
     def extract_business_detail_page(self, business_type):
         all_business_object = Business()
@@ -354,8 +362,10 @@ class ExtractProductsClass(DriverClass):
             business_instance.add_business_menu_items(menu_list, business_obj.business_id)
             business_instance.session_commit()
         self.driver.quit()
+        return "Business details extracted successfully"
 
     def extract_home_services_page(self):
+        business_data=[]
         if self.navigate_to_url(ACTIVITIES_URL) is not None:
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
         wait = WebDriverWait(self.driver, 40)
@@ -363,7 +373,7 @@ class ExtractProductsClass(DriverClass):
         elements = find_elements_by_given_filter(self.driver, "header-link_anchor__09f24__eCD4u", By.CLASS_NAME)
 
         self.click_and_open_new_tab(elements[1])
-        self.extract_restaurant_data(business_type='home services')
+        business_data.extend(self.extract_restaurant_data(business_type='home services'))
         wait = WebDriverWait(self.driver, 20)
         wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "pagination__09f24__VRjN4")))
         next_links = find_element_by_given_filter(self.driver, "pagination__09f24__VRjN4", By.CLASS_NAME)
@@ -375,10 +385,12 @@ class ExtractProductsClass(DriverClass):
             action_chains = ActionChains(self.driver)
             action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
             time.sleep(5)
-            self.extract_restaurant_data(business_type='home services')
+            business_data.extend(self.extract_restaurant_data(business_type='home services'))
         self.driver.quit()
+        return business_data
 
     def extract_auto_services_page(self):
+        business_data=[]
         if self.navigate_to_url(ACTIVITIES_URL) is not None:
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
         wait = WebDriverWait(self.driver, 40)
@@ -386,7 +398,7 @@ class ExtractProductsClass(DriverClass):
         elements = find_elements_by_given_filter(self.driver, "header-link_anchor__09f24__eCD4u", By.CLASS_NAME)
 
         self.click_and_open_new_tab(elements[2])
-        self.extract_restaurant_data(business_type='auto services')
+        business_data.extend(self.extract_restaurant_data(business_type='auto services'))
         wait = WebDriverWait(self.driver, 20)
         wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "pagination__09f24__VRjN4")))
         next_links = find_element_by_given_filter(self.driver, "pagination__09f24__VRjN4", By.CLASS_NAME)
@@ -398,10 +410,12 @@ class ExtractProductsClass(DriverClass):
             action_chains = ActionChains(self.driver)
             action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
             time.sleep(5)
-            self.extract_restaurant_data(business_type='auto services')
+            business_data.extend(self.extract_restaurant_data(business_type='auto services'))
         self.driver.quit()
+        return business_data
 
     def extract_other_services_page(self):
+        business_data=[]
         if self.navigate_to_url(ACTIVITIES_URL) is not None:
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
         wait = WebDriverWait(self.driver, 40)
@@ -417,7 +431,7 @@ class ExtractProductsClass(DriverClass):
         for url_to_follow in list_to_follow:
             if self.navigate_to_url(url_to_follow) is not None:
                 return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
-            self.extract_restaurant_data(business_type='other')
+            business_data.extend(self.extract_restaurant_data(business_type='other'))
             wait = WebDriverWait(self.driver, 20)
             wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "pagination__09f24__VRjN4")))
             next_links = find_element_by_given_filter(self.driver, "pagination__09f24__VRjN4", By.CLASS_NAME)
@@ -429,8 +443,9 @@ class ExtractProductsClass(DriverClass):
                 action_chains = ActionChains(self.driver)
                 action_chains.key_down(Keys.CONTROL).click(link_for_next_page).key_up(Keys.CONTROL).perform()
                 time.sleep(5)
-                self.extract_restaurant_data(business_type='other')
+                business_data.extend(self.extract_restaurant_data(business_type='other'))
         self.driver.quit()
+        return business_data
 
 
 class ExtractEmailsClass(DriverClass):
