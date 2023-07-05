@@ -36,7 +36,7 @@ class DriverClass:
 
         proxies = get_proxies()
         for proxy in proxies:
-            # PROXY = "50.237.89.170:80"  # IP:PORT or HOST:PORT
+            # proxy = "194.158.203.14:80"  # IP:PORT or HOST:PORT
             options.add_argument('--proxy-server=%s' % proxy)
             try:
                 self.driver = Chrome(executable_path=CHROME_EXECUTABLE_PATH, options=options)
@@ -47,6 +47,7 @@ class DriverClass:
     def navigate_to_url(self, url):
         """Navigate to the url"""
         try:
+            time.sleep(60)
             self.driver.get(url)
             logger_instance.logger.info(PAGE_RECEIVED)
         except Exception as E:
@@ -141,6 +142,7 @@ class ExtractActivitiesClass(DriverClass):
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
         self.driver, self.response_data = list_activities(self.driver, self.response_data)
         while len(self.response_data) < 50:
+            time.sleep(5)
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             show_next_button = find_element_by_given_filter(self.driver, "//*[text()='Show more activity']",
                                                             By.XPATH)

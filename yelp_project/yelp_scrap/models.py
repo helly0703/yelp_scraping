@@ -21,17 +21,28 @@ class Article(db.Model):
         return self.article_id
 
 
+activity_types = ['Review', 'Post','Unknown']
+
+
 class Activities(db.Model):
     __tablename__ = 'activities'
 
     activity_id = db.Column(db.Integer, primary_key=True)
     activity_author = db.Column(db.Text)
-    activity_name = db.Column(db.Text)
-    activity_link = db.Column(db.Text)
-    date_created = db.Column(db.DateTime, default=datetime.now)
+    business_link = db.Column(db.Text)
+    business = db.Column(db.Text)
+    business_link = db.Column(db.Text)
+    activity_type = db.Column(db.Enum(*activity_types, name='activity_types'))
+    business_rating = db.Column(db.Float())
 
     def __repr__(self):
         return self.activity_id
+
+    def filter_by_values(self, author, business, activity_type):
+        activity_db = DBActions()
+        activities = activity_db.get_data(Activities, {'activity_author': author, 'business': business,
+                                                       'activity_type': activity_type})
+        return activities
 
 
 class Event(db.Model):
@@ -206,6 +217,7 @@ class Business(db.Model):
         business_db = DBActions()
         business = business_db.get_data(Business, {'business_type': business_type})
         return business
+
 
 class Category(db.Model):
     __tablename__ = 'category'

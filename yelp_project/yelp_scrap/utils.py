@@ -29,8 +29,6 @@ class DBActions:
         return products
 
 
-
-
 def convert_str_to_date(string_date):
     """
     Convert string to date
@@ -139,23 +137,40 @@ def list_activities(driver_instance, activities_data):
 
     elements = find_elements_by_given_filter(driver_instance, "container__09f24__YTiCU", By.CLASS_NAME)
     for element_val in elements:
+        activity_type = 'Unknown'
+        ratings = 0
         activity_by = find_element_by_given_filter(element_val, ".user-passport-info span a", By.CSS_SELECTOR)
         activity = find_element_by_given_filter(element_val, "link__09f24__nEC8H", By.CLASS_NAME)
         activity_name = activity.text
         activity_link = activity.get_attribute('href')
+        try:
+            if rating := find_element_by_given_filter(
+                    element_val, "five-stars__09f24__mBKym", By.CLASS_NAME
+            ):
+                activity_type = 'Review'
+                ratings = float(rating.get_attribute(
+                    'aria-label').split()[0]) if rating is not None else 0
+        except Exception:
+            activity_type = 'Post'
+
         if activity_name != '' and activity_name not in activities_data:
             activities_data[activity_name] = {
-                'activity_name': activity_name,
-                'activity_link': activity_link,
-                'activity_author': activity_by.text
+                'business': activity_name,
+                'business_link': activity_link,
+                'activity_author': activity_by.text,
+                'activity_type': activity_type,
+                'business_rating': ratings,
             }
             try:
                 from yelp_project.yelp_scrap.models import Activities
                 activity_instance = Activities(**activities_data[activity_name])
-                activity_db = DBActions()
-                activity_id = activity_db.check_if_data_exists(Activities, 'activity_name', activity_name)
-                if not activity_id:
+                if activity_instance.filter_by_values(activity_by.text, activity_name, activity_type).count() > 0:
+                    logger_instance.logger.info(
+                        f'{activity_type} by {activity_by.text} for {activity_name} already exists!')
+                else:
+                    activity_db = DBActions()
                     activity_db.add_to_db(activity_instance)
+                    activity_db.commit_session()
             except IntegrityError as E:
                 logger_instance.logger.info(f'{activity_name} already exists!')
             except Exception as E:
