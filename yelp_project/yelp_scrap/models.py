@@ -31,7 +31,6 @@ class Activities(db.Model):
     activity_author = db.Column(db.Text)
     business_link = db.Column(db.Text)
     business = db.Column(db.Text)
-    business_link = db.Column(db.Text)
     activity_type = db.Column(db.Enum(*activity_types, name='activity_types'))
     business_rating = db.Column(db.Float())
 
@@ -42,7 +41,8 @@ class Activities(db.Model):
         activity_db = DBActions()
         activities = activity_db.get_data(Activities, {'activity_author': author, 'business': business,
                                                        'activity_type': activity_type})
-        return activities
+        activity_db.commit_session()
+        return activities.all()
 
 
 class Event(db.Model):

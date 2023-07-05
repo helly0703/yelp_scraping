@@ -15,7 +15,7 @@ from yelp_project.yelp_scrap.constants import (ARTICLES_URL, CHROME_EXECUTABLE_P
                                                EMAILS_CONSTANT, EMAIL_REGEX, DRIVER_CREATION_FAILURE, PAGE_RECEIVED,
                                                PAGE_NOT_FOUND, TAB_OPENED, ERROR_IN_NEW_TAB, ELEMENT_HOVERED,
                                                ERROR_IN_HOVERING, RETURNED_TO_TAB, ERROR_SHIFTING_TAB, DRIVER_QUIT,
-                                               STATUS_CODE, MSG, CONNECTION_INTERRUPTED)
+                                               STATUS_CODE, MSG, CONNECTION_INTERRUPTED, ERROR_ELEMENT)
 from yelp_project.yelp_scrap.models import Business, Category, Emails, Feature
 from yelp_project.yelp_scrap.utils import (extract_articles_data, extract_events_data, list_activities,
                                            find_elements_by_given_filter,
@@ -32,7 +32,7 @@ class DriverClass:
         """initialize driver"""
         self.response_data = {}
         options = ChromeOptions()
-        # options.add_argument('--headless')
+        options.add_argument('--headless')
 
         proxies = get_proxies()
         for proxy in proxies:
@@ -43,11 +43,11 @@ class DriverClass:
                 break
             except Exception as E:
                 logger_instance.logger.exception(DRIVER_CREATION_FAILURE)
-
+        else:
+            logger_instance.logger.exception(DRIVER_CREATION_FAILURE)
     def navigate_to_url(self, url):
         """Navigate to the url"""
         try:
-            time.sleep(60)
             self.driver.get(url)
             logger_instance.logger.info(PAGE_RECEIVED)
         except Exception as E:
@@ -141,13 +141,15 @@ class ExtractActivitiesClass(DriverClass):
         if self.navigate_to_url(ACTIVITIES_URL) is not None:
             return {STATUS_CODE: 400, MSG: CONNECTION_INTERRUPTED}
         self.driver, self.response_data = list_activities(self.driver, self.response_data)
-        while len(self.response_data) < 50:
-            time.sleep(5)
-            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            show_next_button = find_element_by_given_filter(self.driver, "//*[text()='Show more activity']",
-                                                            By.XPATH)
-            show_next_button.click()
-            self.driver, self.response_data = list_activities(self.driver, self.response_data)
+        while len(self.response_data) < 10:
+            try:
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                show_next_button = find_element_by_given_filter(self.driver, "//*[text()='Show more activity']",
+                                                                By.XPATH)
+                show_next_button.click()
+                self.driver, self.response_data = list_activities(self.driver, self.response_data)
+            except Exception:
+                logger_instance.logger.exception(ERROR_ELEMENT)
         self.quit_driver()
         return self.response_data
 

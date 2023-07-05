@@ -152,6 +152,7 @@ def list_activities(driver_instance, activities_data):
                     'aria-label').split()[0]) if rating is not None else 0
         except Exception:
             activity_type = 'Post'
+            ratings = 0
 
         if activity_name != '' and activity_name not in activities_data:
             activities_data[activity_name] = {
@@ -164,7 +165,7 @@ def list_activities(driver_instance, activities_data):
             try:
                 from yelp_project.yelp_scrap.models import Activities
                 activity_instance = Activities(**activities_data[activity_name])
-                if activity_instance.filter_by_values(activity_by.text, activity_name, activity_type).count() > 0:
+                if len(activity_instance.filter_by_values(activity_by.text, activity_name, activity_type)) > 0:
                     logger_instance.logger.info(
                         f'{activity_type} by {activity_by.text} for {activity_name} already exists!')
                 else:
